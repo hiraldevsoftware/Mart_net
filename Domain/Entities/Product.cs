@@ -1,4 +1,5 @@
-﻿using Mart.Domain.Common;
+﻿using Mart.Api.Models;
+using Mart.Domain.Common;
 using Mart.Domain.ValueObjects;
 
 namespace Mart.Domain.Entities
@@ -12,6 +13,9 @@ namespace Mart.Domain.Entities
         public int StockCount { get; private set; }
         public int MinStockAlert { get; private set; }
         public Guid CategoryId { get; private set; }
+        public string? ImageUrl { get; set; }
+
+        public List<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
 
 
         public void UpdateStock(int quantity)
@@ -19,7 +23,8 @@ namespace Mart.Domain.Entities
             if (StockCount + quantity < 0)
                 throw new Exception("Insufficient stock!");
             StockCount += quantity;
-        }
+        }                                      
 
     }
-}
+}                                                 
+                                                    

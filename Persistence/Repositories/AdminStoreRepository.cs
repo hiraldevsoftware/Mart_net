@@ -1,4 +1,5 @@
-﻿using Mart.Api.Models;
+﻿using Dapper;
+using Mart.Api.Models;
 using Mart.Domain.Interface;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -35,7 +36,7 @@ namespace Mart.Persistence.Repositories
         {
             using var conn = (SqlConnection)_connectionFactory.CreateConnection();
 
-  
+
             const string sql = @"
         UPDATE Users 
         SET Role = 'Manager', StoreId = @StoreId, UpdatedAt = SYSDATETIMEOFFSET()
@@ -47,6 +48,21 @@ namespace Mart.Persistence.Repositories
 
             if (conn.State != ConnectionState.Open) await conn.OpenAsync();
             return await cmd.ExecuteNonQueryAsync() > 0;
+        }
+
+
+        public async Task<bool> AssignOrderToStoreAsync(int orderId, int storeId)
+        {
+            using var conn = (SqlConnection)_connectionFactory.CreateConnection();
+
+            const string sql = @"
+        UPDATE Orders 
+        SET StoreId = @StoreId, 
+            UpdatedAt = SYSDATETIMEOFFSET() 
+        WHERE Id = @OrderId";
+
+            int rows = await conn.ExecuteAsync(sql, new { OrderId = orderId, StoreId = storeId });
+            return rows > 0;
         }
 
         public async Task<IEnumerable<dynamic>> GetAssignableUsersAsync()

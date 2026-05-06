@@ -32,5 +32,7 @@ namespace Mart.Domain.Interface
 
         Task<IEnumerable<object>> GetExpiryAlertsAsync(int daysThreshold);
         Task<bool> MarkBatchAsWasteAsync(int batchId);
+
+        Task<bool> AddProductBatchAsync(int productId, string batchNumber, DateTime expiryDate, int quantity);
     }
 }

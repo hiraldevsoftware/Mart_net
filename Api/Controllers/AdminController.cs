@@ -204,7 +204,7 @@ namespace Mart.Api.Controllers
                 // રેપોઝીટરીમાંથી એલર્ટ્સ મેળવો
                 var alerts = await _adminRepo.GetLowStockAlertsAsync();
 
-                // જો લિસ્ટ ખાલી હોય તો પણ ખાલી લિસ્ટ (Empty Array) મોકલીશું
+  
                 return Ok(alerts);
             }
             catch (Exception ex)
@@ -232,6 +232,15 @@ namespace Mart.Api.Controllers
 
             var affectedRows = await _adminRepo.BulkUpdatePriceAsync(dto.ProductIds, dto.Percentage);
             return Ok(new { Message = $"{affectedRows} Product Price Updated" });
+        }
+
+
+        [HttpPost("batch/add")]
+        public async Task<IActionResult> AddBatch([FromBody] BatchRequest request)
+        {
+            var result = await _adminRepo.AddProductBatchAsync(request.ProductId, request.BatchNumber, request.ExpiryDate, request.Quantity);
+            if (result) return Ok(new { message = "Batch added and stock updated!" });
+            return BadRequest("Failed to add batch");
         }
 
     }

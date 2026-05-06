@@ -109,7 +109,7 @@ namespace Mart.Api.Controllers
         public async Task<IActionResult> ReadyForPickup(int orderId, [FromQuery] int storeId)
         {
 
-            var result = await _storeRepo.UpdateOrderStatusAsync(orderId, storeId, 3);
+            var result = await _storeRepo.UpdateOrderStatusAsync(orderId, storeId, 5);
             return result ? Ok(new { msg = "Order is Ready. Notification sent to Rider." }) : BadRequest();
         }
 
@@ -118,7 +118,7 @@ namespace Mart.Api.Controllers
         public async Task<IActionResult> RejectOrder(int orderId, [FromQuery] int storeId)
         {
 
-            var result = await _storeRepo.UpdateOrderStatusAsync(orderId, storeId, 5);
+            var result = await _storeRepo.UpdateOrderStatusAsync(orderId, storeId, 3);
             return result ? Ok(new { msg = "Order Rejected." }) : BadRequest();
         }
 

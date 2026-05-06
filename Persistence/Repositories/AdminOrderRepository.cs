@@ -110,8 +110,9 @@ namespace Mart.Persistence.Repositories
                 transaction.Commit();
                 return true;
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 transaction.Rollback();
                 return false;
             }

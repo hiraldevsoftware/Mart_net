@@ -34,7 +34,10 @@ namespace Mart.Api.Controllers
                 Price = p.Price.Amount, 
                 Currency = p.Price.Currency,
                 StockCount = p.StockCount,
-                CategoryId = p.CategoryId
+                CategoryId = p.CategoryId,
+                Variants = p.Variants,
+                ImageUrl = p.ImageUrl
+
             });
 
             return Ok(response);
@@ -86,6 +89,7 @@ namespace Mart.Api.Controllers
                 Currency = p.Price.Currency,
                 StockCount = p.StockCount,
                 CategoryId = p.CategoryId,
+
                  //Tags = p.Tags
             });
 
@@ -271,7 +275,7 @@ namespace Mart.Api.Controllers
             }
         }
 
-
+ 
 
 
 

@@ -55,6 +55,7 @@ namespace Mart
             builder.Services.AddScoped<IAdminSupportRepository, AdminSupportRepository>();
             builder.Services.AddScoped<IAdminMarketingRepository, AdminMarketingRepository>();
             builder.Services.AddScoped<IRiderRepository, RiderRepository>();
+            builder.Services.AddScoped<IVendorRepository, VendorRepository>();
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection")));
 

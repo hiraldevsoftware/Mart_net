@@ -1,4 +1,6 @@
-﻿using Mart.Domain.Entities;
+﻿using Mart.Api.Models;
+using Mart.Domain.Entities;
+using Microsoft.Data.SqlClient;
 
 namespace Mart.Domain.Interface
 {
@@ -29,6 +31,8 @@ namespace Mart.Domain.Interface
         Task<IEnumerable<object>> GetFrequentlyBoughtTogetherAsync(int productId);
 
         Task<IEnumerable<ProductMedia>> GetProductMediaAsync(int productId);
+
+        Task<List<ProductVariantDto>> GetVariantsAsync(int productId, SqlConnection conn, SqlTransaction trans = null);
 
     }
 }

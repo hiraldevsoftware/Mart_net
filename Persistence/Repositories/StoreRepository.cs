@@ -113,29 +113,41 @@ namespace Mart.Persistence.Repositories
 
 
 
-        //public async Task<bool> UpdateStoreStockAsync(int storeId, int productId, int newQuantity)
+
+        //public async Task<bool> UpdateStoreStockAsync(int storeId, int productId, int newQuantity, int staffId, string reason)
         //{
         //    using var conn = (SqlConnection)_connectionFactory.CreateConnection();
         //    const string sql = @"
-        //    UPDATE ProductInventory 
-        //    SET StockQuantity = @NewQuantity, 
-        //        LastUpdated = GETDATE()
-        //    WHERE StoreId = @StoreId AND ProductId = @ProductId";
+        //UPDATE ProductInventory 
+        //SET StockQuantity = @NewQuantity, 
+        //    StaffId = @StaffId, 
+        //    Reason = @Reason, 
+        //    LastUpdated = GETDATE()
+        //WHERE StoreId = @StoreId AND ProductId = @ProductId";
 
-        //    int rows = await conn.ExecuteAsync(sql, new { NewQuantity = newQuantity, StoreId = storeId, ProductId = productId });
+        //    int rows = await conn.ExecuteAsync(sql, new
+        //    {
+        //        NewQuantity = newQuantity,
+        //        StaffId = staffId,
+        //        Reason = reason,
+        //        StoreId = storeId,
+        //        ProductId = productId
+        //    });
         //    return rows > 0;
         //}
-
 
         public async Task<bool> UpdateStoreStockAsync(int storeId, int productId, int newQuantity, int staffId, string reason)
         {
             using var conn = (SqlConnection)_connectionFactory.CreateConnection();
+
+
             const string sql = @"
         UPDATE ProductInventory 
         SET StockQuantity = @NewQuantity, 
+            LastUpdated = GETDATE(),
+            -- જો આ કોલમ્સ હોય તો જ રાખવી:
             StaffId = @StaffId, 
-            Reason = @Reason, 
-            LastUpdated = GETDATE()
+            Reason = @Reason
         WHERE StoreId = @StoreId AND ProductId = @ProductId";
 
             int rows = await conn.ExecuteAsync(sql, new
@@ -146,6 +158,7 @@ namespace Mart.Persistence.Repositories
                 StoreId = storeId,
                 ProductId = productId
             });
+
             return rows > 0;
         }
 
@@ -164,6 +177,44 @@ namespace Mart.Persistence.Repositories
 
 
 
+        //public async Task<bool> UpdateOrderStatusAsync(int orderId, int storeId, int newStatus)
+        //{
+        //    using var conn = (SqlConnection)_connectionFactory.CreateConnection();
+        //    await conn.OpenAsync();
+        //    using var transaction = conn.BeginTransaction();
+
+        //    try
+        //    {
+
+        //        const string sqlOrder = @"UPDATE Orders SET OrderStatus = @Status, UpdatedAt = SYSDATETIMEOFFSET() 
+        //                         WHERE Id = @OrderId AND StoreId = @StoreId";
+
+        //        var affected = await conn.ExecuteAsync(sqlOrder, new { Status = newStatus, OrderId = orderId, StoreId = storeId }, transaction);
+
+
+        //        if (newStatus == 2)
+        //        {
+        //            const string sqlStock = @"
+        //        UPDATE PI SET PI.StockQuantity = PI.StockQuantity - OI.Quantity
+        //        FROM ProductInventory PI
+        //        INNER JOIN OrderItems OI ON PI.ProductId = OI.ProductId
+        //        WHERE OI.OrderId = @OrderId AND PI.StoreId = @StoreId";
+
+        //            await conn.ExecuteAsync(sqlStock, new { OrderId = orderId, StoreId = storeId }, transaction);
+        //        }
+
+        //        transaction.Commit();
+        //        return affected > 0;
+        //    }
+        //    catch
+        //    {
+        //        transaction.Rollback();
+        //        throw;
+        //    }
+        //}
+
+
+
         public async Task<bool> UpdateOrderStatusAsync(int orderId, int storeId, int newStatus)
         {
             using var conn = (SqlConnection)_connectionFactory.CreateConnection();
@@ -172,26 +223,43 @@ namespace Mart.Persistence.Repositories
 
             try
             {
+                // ૧. ઓર્ડરનું સ્ટેટસ અપડેટ કરવું
+                // અહીં ખાતરી કરો કે 'Id' અને 'OrderStatus' કોલમના નામ તારા ડેટાબેઝ મુજબ જ છે
+                const string sqlOrder = @"
+            UPDATE Orders 
+            SET OrderStatus = @Status, 
+                UpdatedAt = SYSDATETIMEOFFSET() 
+            WHERE Id = @OrderId AND StoreId = @StoreId";
 
-                const string sqlOrder = @"UPDATE Orders SET OrderStatus = @Status, UpdatedAt = SYSDATETIMEOFFSET() 
-                                 WHERE Id = @OrderId AND StoreId = @StoreId";
+                var affected = await conn.ExecuteAsync(sqlOrder,
+                    new { Status = newStatus, OrderId = orderId, StoreId = storeId },
+                    transaction);
 
-                var affected = await conn.ExecuteAsync(sqlOrder, new { Status = newStatus, OrderId = orderId, StoreId = storeId }, transaction);
+                // ૨. જો કોઈ રો અપડેટ ન થાય (affected == 0), તો એનો અર્થ એ કે:
+                // ઓર્ડર આ સ્ટોરનો નથી અથવા ઓર્ડર આઈડી ખોટો છે.
+                if (affected == 0)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
 
-
+                // ૩. જો ઓર્ડર એક્સેપ્ટ થયો હોય (Status 2), તો જ સ્ટોક કાપવો
                 if (newStatus == 2)
                 {
                     const string sqlStock = @"
-                UPDATE PI SET PI.StockQuantity = PI.StockQuantity - OI.Quantity
+                UPDATE PI 
+                SET PI.StockQuantity = PI.StockQuantity - OI.Quantity
                 FROM ProductInventory PI
                 INNER JOIN OrderItems OI ON PI.ProductId = OI.ProductId
                 WHERE OI.OrderId = @OrderId AND PI.StoreId = @StoreId";
 
-                    await conn.ExecuteAsync(sqlStock, new { OrderId = orderId, StoreId = storeId }, transaction);
+                    await conn.ExecuteAsync(sqlStock,
+                        new { OrderId = orderId, StoreId = storeId },
+                        transaction);
                 }
 
                 transaction.Commit();
-                return affected > 0;
+                return true;
             }
             catch
             {

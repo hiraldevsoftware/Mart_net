@@ -215,11 +215,17 @@ namespace Mart.Persistence.Repositories
             using var connection = (SqlConnection)_connectionFactory.CreateConnection();
 
 
+            //    const string sql = @"
+            //SELECT o.Id, o.OrderStatus, t.Latitude, t.Longitude, t.LastUpdated
+            //FROM Orders o
+            //LEFT JOIN OrderTracking t ON o.Id = t.OrderId
+            //WHERE o.Id = @OrderId";
+
             const string sql = @"
-        SELECT o.Id, o.OrderStatus, t.Latitude, t.Longitude, t.LastUpdated
-        FROM Orders o
-        LEFT JOIN OrderTracking t ON o.Id = t.OrderId
-        WHERE o.Id = @OrderId";
+SELECT o.Id, o.OrderStatus, t.Latitude, t.Longitude, t.LastUpdated
+FROM Orders o WITH (NOLOCK)
+LEFT JOIN OrderTracking t WITH (NOLOCK) ON o.Id = t.OrderId
+WHERE o.Id = @OrderId";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@OrderId", orderId);

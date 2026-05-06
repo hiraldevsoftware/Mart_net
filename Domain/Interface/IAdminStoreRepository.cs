@@ -9,6 +9,8 @@ namespace Mart.Domain.Interface
 
 
         Task<IEnumerable<dynamic>> GetAllStoresSummaryAsync();
+        Task<bool> AssignOrderToStoreAsync(int orderId, int storeId);
+
 
 
         Task<IEnumerable<dynamic>> GetPendingStockRequestsAsync();

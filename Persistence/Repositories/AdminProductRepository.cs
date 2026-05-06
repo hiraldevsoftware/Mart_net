@@ -127,9 +127,12 @@ namespace Mart.Persistence.Repositories
         public async Task<bool> AddProductMediaAsync(ProductMedia media)
         {
             using var connection = (SqlConnection)_connectionFactory.CreateConnection();
+            //const string sql = @"
+            //    INSERT INTO ProductMedia (ProductId, MediaUrl, MediaType, DisplayOrder, IsPrimary)
+            //    VALUES (@Pid, @Url, @Type, @Order, @IsPrimary)";
             const string sql = @"
-                INSERT INTO ProductMedia (ProductId, MediaUrl, MediaType, DisplayOrder, IsPrimary)
-                VALUES (@Pid, @Url, @Type, @Order, @IsPrimary)";
+    INSERT INTO ProductMedia (ProductId, MediaUrl, MediaType, DisplayOrder, IsPrimary, CreatedAt)
+    VALUES (@Pid, @Url, @Type, @Order, @IsPrimary, GETDATE())"; 
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@Pid", media.ProductId);
@@ -244,16 +247,37 @@ namespace Mart.Persistence.Repositories
             return alerts;
         }
 
+        //public async Task<bool> MarkBatchAsWasteAsync(int batchId)
+        //{
+        //    using var connection = (SqlConnection)_connectionFactory.CreateConnection();
+        //    const string sql = "UPDATE ProductBatches SET IsWaste = 1, Quantity = 0 WHERE Id = @Id";
+
+        //    using var command = new SqlCommand(sql, connection);
+        //    command.Parameters.AddWithValue("@Id", batchId);
+
+        //    if (connection.State != ConnectionState.Open) await connection.OpenAsync();
+        //    return await command.ExecuteNonQueryAsync() > 0;
+        //}
+
         public async Task<bool> MarkBatchAsWasteAsync(int batchId)
         {
             using var connection = (SqlConnection)_connectionFactory.CreateConnection();
-            const string sql = "UPDATE ProductBatches SET IsWaste = 1, Quantity = 0 WHERE Id = @Id";
 
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@Id", batchId);
+      
+            using var command = new SqlCommand("sp_MarkBatchAsWaste", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@BatchId", batchId);
 
             if (connection.State != ConnectionState.Open) await connection.OpenAsync();
-            return await command.ExecuteNonQueryAsync() > 0;
+
+            int rowsAffected = await command.ExecuteNonQueryAsync();
+
+            if (rowsAffected > 0)
+            {
+
+                return true;
+            }
+            return false;
         }
 
 
@@ -281,7 +305,29 @@ namespace Mart.Persistence.Repositories
                 return MapToProduct(reader);
             }
 
-            return null;
+            return null;    
+        }
+
+
+        public async Task<bool> AddProductBatchAsync(int productId, string batchNumber, DateTime expiryDate, int quantity)
+        {
+            using var connection = (SqlConnection)_connectionFactory.CreateConnection();
+            const string sql = @"
+        INSERT INTO ProductBatches (ProductId, BatchNumber, ExpiryDate, Quantity, IsWaste)
+        VALUES (@Pid, @BatchNo, @Expiry, @Qty, 0);
+        
+       
+        UPDATE Products SET StockCount = StockCount + @Qty WHERE Id = @Pid;
+        UPDATE ProductInventory SET StockQuantity = StockQuantity + @Qty WHERE ProductId = @Pid AND StoreId = 1;";
+
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@Pid", productId);
+            command.Parameters.AddWithValue("@BatchNo", batchNumber);
+            command.Parameters.AddWithValue("@Expiry", expiryDate);
+            command.Parameters.AddWithValue("@Qty", quantity);
+
+            if (connection.State != ConnectionState.Open) await connection.OpenAsync();
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
 

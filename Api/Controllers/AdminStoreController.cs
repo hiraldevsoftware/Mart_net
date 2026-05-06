@@ -75,22 +75,32 @@ namespace Mart.Api.Controllers
         }
 
 
-        [HttpPost("assign-manager")]
-        public async Task<IActionResult> AssignManager([FromBody] AssignManagerRequest request)
-        {
-            if (request == null || request.UserId <= 0 || request.StoreId <= 0)
-                return BadRequest("Invalid Data");
+        //[HttpPost("assign-manager")]
+        //public async Task<IActionResult> AssignManager([FromBody] AssignManagerRequest request)
+        //{
+        //    if (request == null || request.UserId <= 0 || request.StoreId <= 0)
+        //        return BadRequest("Invalid Data");
 
-            var result = await _adminRepo.AssignManagerToStoreAsync(request.UserId, request.StoreId);
+        //    var result = await _adminRepo.AssignManagerToStoreAsync(request.UserId, request.StoreId);
+
+        //    if (result)
+        //        return Ok(new { message = "Manager assigned successfully!" });
+
+        //    return StatusCode(500, "Update failed.");
+        //}
+
+
+        [HttpPost("assign-order-to-store")]
+        public async Task<IActionResult> AssignOrderToStore(int orderId, int storeId)
+        {
+       
+            var result = await _adminRepo.AssignOrderToStoreAsync(orderId, storeId);
 
             if (result)
-                return Ok(new { message = "Manager assigned successfully!" });
+                return Ok(new { message = "Order successfully assigned to store manager!" });
 
-            return StatusCode(500, "Update failed.");
+            return BadRequest("Failed to assign order.");
         }
-
-
-
 
 
 

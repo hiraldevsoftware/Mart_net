@@ -16,6 +16,9 @@ namespace Mart.Api.Models
         public int MinStockAlert { get; set; }
         public Guid CategoryId { get; set; }
 
+        public int Stock { get; set; } 
+        public string? ImageUrl { get; set; }
+
         public void UpdateStock(int quantity)
         {
             if (StockCount + quantity < 0)

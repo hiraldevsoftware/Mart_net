@@ -181,6 +181,22 @@
   },
   {
     "ContainingType": "Mart.Api.Controllers.AdminController",
+    "Method": "AddBatch",
+    "RelativePath": "api/admin/batch/add",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Mart.Api.Models.BatchRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.AdminController",
     "Method": "BulkPriceUpdate",
     "RelativePath": "api/admin/bulk-price-update",
     "HttpMethod": "POST",
@@ -841,16 +857,21 @@
   },
   {
     "ContainingType": "Mart.Api.Controllers.AdminStoreController",
-    "Method": "AssignManager",
-    "RelativePath": "api/AdminStore/assign-manager",
+    "Method": "AssignOrderToStore",
+    "RelativePath": "api/AdminStore/assign-order-to-store",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "request",
-        "Type": "Mart.Api.Models.AssignManagerRequest",
-        "IsRequired": true
+        "Name": "orderId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "storeId",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -1927,6 +1948,274 @@
       {
         "Name": "barcode",
         "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetDashboard",
+    "RelativePath": "api/Vendor/{vendorId}/dashboard",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetDashboardStats",
+    "RelativePath": "api/Vendor/{vendorId}/dashboard-stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetMyProducts",
+    "RelativePath": "api/Vendor/{vendorId}/my-products",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetHistory",
+    "RelativePath": "api/Vendor/{vendorId}/order-history",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetOrders",
+    "RelativePath": "api/Vendor/{vendorId}/orders",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetOrders",
+    "RelativePath": "api/Vendor/{vendorId}/pending-orders",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "GetWallet",
+    "RelativePath": "api/Vendor/{vendorId}/wallet",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "AddProduct",
+    "RelativePath": "api/Vendor/add-product",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Mart.Api.Models.ProductRequest",
+        "IsRequired": true
+      },
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "CreatePO",
+    "RelativePath": "api/Vendor/create-po",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "quantity",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "deliveryDate",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/Vendor/order/{poId}/update-status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "poId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "RespondToPO",
+    "RelativePath": "api/Vendor/respond-po",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "poId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "UpdateInventory",
+    "RelativePath": "api/Vendor/update-inventory",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "price",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      },
+      {
+        "Name": "stock",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Mart.Api.Controllers.VendorController",
+    "Method": "UpdateProduct",
+    "RelativePath": "api/Vendor/update-product/{productId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "Mart.Api.Models.ProductRequest",
+        "IsRequired": true
+      },
+      {
+        "Name": "vendorId",
+        "Type": "System.Int32",
         "IsRequired": false
       }
     ],

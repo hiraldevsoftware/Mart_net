@@ -1,4 +1,5 @@
-﻿using Mart.Domain.Entities;
+﻿using Mart.Api.Models;
+using Mart.Domain.Entities;
 using Mart.Domain.Interface;
 using Mart.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
@@ -16,26 +17,80 @@ namespace Mart.Persistence.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<IEnumerable<Product>>GetAllProductsAsync()
+
+        public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
             var products = new List<Product>();
-            using var connection = _connectionFactory.CreateConnection();
+            using var connection = (SqlConnection)_connectionFactory.CreateConnection();
+            await connection.OpenAsync();
 
-            const string sql= "SELECT * FROM Products WHERE IsDeleted = 0";
 
-            using var command = new SqlCommand(sql, (SqlConnection)connection);
+            const string sql = @"
+SELECT p.*, 
+       ISNULL((SELECT TOP 1 pm.MediaUrl 
+               FROM ProductMedia pm 
+               WHERE pm.ProductId = p.Id 
+               ORDER BY pm.IsPrimary DESC, pm.CreatedAt DESC), '') as ImageUrl
+FROM Products p
+WHERE p.IsDeleted = 0";
 
-            if (connection.State != ConnectionState.Open) await ((SqlConnection)connection).OpenAsync();
-
-            using var reader= await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
+            using var command = new SqlCommand(sql, connection);
+            using (var reader = await command.ExecuteReaderAsync())
             {
-                products.Add(MapToProduct(reader));
-            }
-            return products;
+                while (await reader.ReadAsync())
+                {
+                    var product = MapToProduct(reader);
 
+                  
+             
+                    products.Add(product);
+                }
+            }
+
+            foreach (var product in products)
+            {
+                //var variantsDto = await GetVariantsAsync(product.Id, connection);
+                //var prop = typeof(Product).GetProperty("Variants");
+                //if (prop != null)
+                //{
+                //    prop.SetValue(product, variantsDto);
+                //}
+                product.Variants = await GetVariantsAsync(product.Id, connection);
+            }
+
+            return products;
         }
+
+
+
+        //public async Task<IEnumerable<Product>> GetAllProductsAsync()
+        //{
+        //    var products = new List<Product>();
+        //    using var connection = (SqlConnection)_connectionFactory.CreateConnection();
+        //    await connection.OpenAsync();
+
+
+        //    const string sql = "SELECT * FROM Products WHERE IsDeleted = 0";
+        //    using var command = new SqlCommand(sql, connection);
+        //    using (var reader = await command.ExecuteReaderAsync())
+        //    {
+        //        while (await reader.ReadAsync())
+        //        {
+        //            products.Add(MapToProduct(reader));
+        //        }
+        //    } 
+
+        //    foreach (var product in products)
+        //    {
+
+        //        var variantsDto = await GetVariantsAsync(product.Id, connection);
+
+
+        //        typeof(Product).GetProperty("Variants")?.SetValue(product, variantsDto);
+        //    }
+
+        //    return products;
+        //}
 
         Task<Product?> IProductRepository.GetProductByIdAsync(int id)
         {
@@ -65,29 +120,67 @@ namespace Mart.Persistence.Repositories
         }
 
 
+        //private Product MapToProduct(SqlDataReader reader)
+        //{
+        //    var product = (Product)Activator.CreateInstance(typeof(Product), true)!;
+
+
+        //    typeof(Product).GetProperty("Id")?.SetValue(product, (int)reader["Id"]);
+        //    typeof(Product).GetProperty("Name")?.SetValue(product, reader["Name"].ToString());
+        //    typeof(Product).GetProperty("Description")?.SetValue(product, reader["Description"].ToString());
+        //    typeof(Product).GetProperty("StockCount")?.SetValue(product, (int)reader["StockCount"]);
+        //    typeof(Product).GetProperty("MinStockAlert")?.SetValue(product, (int)reader["MinStockAlert"]);
+        //    typeof(Product).GetProperty("CategoryId")?.SetValue(product, (Guid)reader["CategoryId"]);
+        //    typeof(Product).GetProperty("Tags")?.SetValue(product, reader["Tags"]?.ToString());
+        //    typeof(Product).GetProperty("Barcode")?.SetValue(product, reader["Barcode"]?.ToString());
+
+        //    var amount = (decimal)reader["PriceAmount"];
+        //    var currency = reader["Currency"].ToString() ?? "INR";
+        //    var price = new Money(amount, currency);
+        //    typeof(Product).GetProperty("Price")?.SetValue(product, price);
+
+        //    if (reader["ImageUrl"] != DBNull.Value)
+        //    {
+        //        string imgPath = reader["ImageUrl"].ToString();
+
+
+        //        var prop = typeof(Product).GetProperty("ImageUrl") ?? typeof(Product).GetProperty("imageUrl");
+        //        prop?.SetValue(product, imgPath);
+        //    }
+
+        //    return product;
+        //}
+
         private Product MapToProduct(SqlDataReader reader)
         {
+
             var product = (Product)Activator.CreateInstance(typeof(Product), true)!;
 
 
-            typeof(Product).GetProperty("Id")?.SetValue(product, (int)reader["Id"]);
-            typeof(Product).GetProperty("Name")?.SetValue(product, reader["Name"].ToString());
-            typeof(Product).GetProperty("Description")?.SetValue(product, reader["Description"].ToString());
-            typeof(Product).GetProperty("StockCount")?.SetValue(product, (int)reader["StockCount"]);
-            typeof(Product).GetProperty("MinStockAlert")?.SetValue(product, (int)reader["MinStockAlert"]);
-            typeof(Product).GetProperty("CategoryId")?.SetValue(product, (Guid)reader["CategoryId"]);
-            typeof(Product).GetProperty("Tags")?.SetValue(product, reader["Tags"]?.ToString());
- 
-            typeof(Product).GetProperty("Barcode")?.SetValue(product, reader["Barcode"]?.ToString());
+            SetProperty(product, "Id", (int)reader["Id"]);
+            SetProperty(product, "Name", reader["Name"].ToString());
+            SetProperty(product, "Description", reader["Description"].ToString());
+            SetProperty(product, "StockCount", (int)reader["StockCount"]);
+            SetProperty(product, "MinStockAlert", (int)reader["MinStockAlert"]);
+            SetProperty(product, "CategoryId", (Guid)reader["CategoryId"]);
 
+            var imgPath = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : null;
+            SetProperty(product, "ImageUrl", imgPath);
 
             var amount = (decimal)reader["PriceAmount"];
             var currency = reader["Currency"].ToString() ?? "INR";
-            var price = new Money(amount, currency); 
-            typeof(Product).GetProperty("Price")?.SetValue(product, price);
-         
+            SetProperty(product, "Price", new Money(amount, currency));
 
             return product;
+        }
+
+        private void SetProperty(object obj, string propertyName, object? value)
+        {
+            var prop = obj.GetType().GetProperty(propertyName);
+            if (prop != null)
+            {
+                prop.SetValue(obj, value);
+            }
         }
 
         public async Task<IEnumerable<Product>> SearchProductsAsync(string term)
@@ -587,11 +680,39 @@ namespace Mart.Persistence.Repositories
                 return "Error: " + ex.Message;
             }
         }
+        public async Task<List<ProductVariantDto>> GetVariantsAsync(int productId, SqlConnection conn, SqlTransaction trans = null)
+        {
+            var variants = new List<ProductVariantDto>();
 
 
+            const string sql = @"SELECT p.Id as ProductMainId, v.Id as VariantId, v.VariantName, 
+                               v.Price as VariantPrice, v.StockQuantity as VariantStock, 
+                               v.SKU as VariantSKU
+                        FROM Products p 
+                        LEFT JOIN ProductVariants v ON p.Id = v.ProductId 
+                        WHERE p.Id = @ProductId AND p.IsDeleted = 0";
 
+            using var cmd = new SqlCommand(sql, conn, trans);
+            cmd.Parameters.AddWithValue("@ProductId", productId);
 
-      
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
 
+                if (reader["VariantId"] != DBNull.Value)
+                {
+                    variants.Add(new ProductVariantDto
+                    {
+                        Id = (int)reader["VariantId"],
+                        VariantName = reader["VariantName"].ToString(),
+                        Price = (decimal)reader["VariantPrice"],
+                        StockQuantity = (int)reader["VariantStock"],
+
+                        SKU = reader["VariantSKU"] != DBNull.Value ? reader["VariantSKU"].ToString() : string.Empty
+                    });
+                }
+            }
+            return variants;
+        }
     }
 }
